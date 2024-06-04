@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Word List</title>
+</head>
+<body>
+<h1>단어 </h1>
+<table>
+    <thead>
+    <tr>
+        <th>ROOT</th>
+        <th>ID</th>
+        <th>Word</th>
+        <th>Meaning</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="word : ${words}">
+        <td th:text="${word.root}"></td>
+        <td th:text="${word.id}"></td>
+        <td th:text="${word.word}"></td>
+        <td th:text="${word.meaning}"></td>
+    </tr>
+    </tbody>
+</table>
+<!-- 버튼 추가 -->
+<form action="/Wordpage_2" method="get">
+    <button type="submit"> 문제풀기</button>
+</form>
+</body>
+</html>
