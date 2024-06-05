@@ -1,6 +1,5 @@
 package com.example.demo.controller;
 
-
 import com.example.demo.Object.word;
 import com.example.demo.service.ChatService;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -8,9 +7,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 
 @Controller
@@ -49,14 +51,13 @@ public class TestController {
                 "  }\n" +
                 "]";
 
-
         String jsonString = chatService.getChatResponse(question);
-
 
         ObjectMapper objectMapper = new ObjectMapper();
         try {
-            List<word> words = objectMapper.readValue(jsonString, new TypeReference<List<word>>(){});
+            List<word> words = objectMapper.readValue(jsonString, new TypeReference<List<word>>() {});
             model.addAttribute("words", words);
+            model.addAttribute("wordsJson", jsonString);  // JSON 문자열도 모델에 추가
         } catch (IOException e) {
             log.error("An error occurred while processing the request: {}", e.getMessage());
             return "errorPage";
@@ -64,5 +65,39 @@ public class TestController {
 
         return "wordList";
     }
-}
 
+    @GetMapping("/Wordpage_2")
+    public String wordQuiz(@RequestParam("wordsJson") String wordsJson, Model model) {
+        ObjectMapper objectMapper = new ObjectMapper();
+        try {
+            List<word> words = objectMapper.readValue(wordsJson, new TypeReference<List<word>>() {});
+            Collections.shuffle(words);  // 단어 목록을 셔플
+            model.addAttribute("words", words);
+            model.addAttribute("wordsJson", wordsJson);  // JSON 문자열도 모델에 추가
+        } catch (IOException e) {
+            log.error("An error occurred while processing the request: {}", e.getMessage());
+            return "errorPage";
+        }
+        return "wordQuiz";
+    }
+
+    @PostMapping("/checkAnswers")
+    public String checkAnswers(@RequestParam List<String> userAnswers, @RequestParam("wordsJson") String wordsJson, Model model) {
+        ObjectMapper objectMapper = new ObjectMapper();
+        try {
+            List<word> words = objectMapper.readValue(wordsJson, new TypeReference<List<word>>() {});
+            int score = 0;
+            for (int i = 0; i < words.size(); i++) {
+                if (words.get(i).getMeaning().equals(userAnswers.get(i))) {
+                    score++;
+                }
+            }
+            model.addAttribute("score", score);
+            model.addAttribute("words", words);
+        } catch (IOException e) {
+            log.error("An error occurred while processing the request: {}", e.getMessage());
+            return "errorPage";
+        }
+        return "wordQuizResult";
+    }
+}

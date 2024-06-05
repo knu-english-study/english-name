@@ -2,31 +2,28 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Word List</title>
+    <title>Quiz Result</title>
 </head>
 <body>
-<h1>단어 목록</h1>
+<h1>결과</h1>
+<p>당신의 점수: <span th:text="${score}"></span></p>
+<h2>정답</h2>
 <table>
     <thead>
     <tr>
-        <th>ROOT</th>
-        <th>ID</th>
         <th>Word</th>
         <th>Meaning</th>
     </tr>
     </thead>
     <tbody>
     <tr th:each="word : ${words}">
-        <td th:text="${word.root}"></td>
-        <td th:text="${word.id}"></td>
         <td th:text="${word.word}"></td>
         <td th:text="${word.meaning}"></td>
     </tr>
     </tbody>
 </table>
-<form action="/Wordpage_2" method="get">
-    <input type="hidden" name="wordsJson" th:value="${wordsJson}"/>
-    <button type="submit">문제풀기</button>
+<form action="/Wordpage_1" method="get">
+    <button type="submit">다시 시도하기</button>
 </form>
 </body>
 </html>
