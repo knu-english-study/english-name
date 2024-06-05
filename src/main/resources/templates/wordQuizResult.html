@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Quiz Result</title>
+</head>
+<body>
+<h1>결과</h1>
+<p>당신의 점수: <span th:text="${score}"></span></p>
+<h2>정답</h2>
+<table>
+    <thead>
+    <tr>
+        <th>Word</th>
+        <th>Meaning</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="word : ${words}">
+        <td th:text="${word.word}"></td>
+        <td th:text="${word.meaning}"></td>
+    </tr>
+    </tbody>
+</table>
+<form action="/Wordpage_1" method="get">
+    <button type="submit">다시 시도하기</button>
+</form>
+</body>
+</html>

@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Word Quiz</title>
+</head>
+<body>
+<h1>단어 퀴즈</h1>
+<form action="/checkAnswers" method="post">
+    <table>
+        <thead>
+        <tr>
+            <th>Word</th>
+            <th>Your Answer</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="word : ${words}">
+            <td th:text="${word.word}"></td>
+            <td><input type="text" name="userAnswers" /></td>
+        </tr>
+        </tbody>
+    </table>
+    <input type="hidden" name="wordsJson" th:value="${wordsJson}"/>
+    <button type="submit">제출</button>
+</form>
+</body>
+</html>
