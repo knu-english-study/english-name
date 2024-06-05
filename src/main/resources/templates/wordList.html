@@ -5,7 +5,7 @@
     <title>Word List</title>
 </head>
 <body>
-<h1>단어 </h1>
+<h1>단어 목록</h1>
 <table>
     <thead>
     <tr>
@@ -24,9 +24,9 @@
     </tr>
     </tbody>
 </table>
-<!-- 버튼 추가 -->
 <form action="/Wordpage_2" method="get">
-    <button type="submit"> 문제풀기</button>
+    <input type="hidden" name="wordsJson" th:value="${wordsJson}"/>
+    <button type="submit">문제풀기</button>
 </form>
 </body>
 </html>
