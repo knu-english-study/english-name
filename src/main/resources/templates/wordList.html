@@ -2,7 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Word List</title>
+    <title>Word and Sentence List</title>
 </head>
 <body>
 <h1>단어 목록</h1>
@@ -24,9 +24,28 @@
     </tr>
     </tbody>
 </table>
+
 <form action="/Wordpage_2" method="get">
     <input type="hidden" name="wordsJson" th:value="${wordsJson}"/>
     <button type="submit">문제풀기</button>
 </form>
+
+<h1>문장 목록</h1>
+<table>
+    <thead>
+    <tr>
+        <th>ID</th>
+        <th>Sentence</th>
+        <th>Meaning</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="sentence : ${sentences}">
+        <td th:text="${sentence.id}"></td>
+        <td th:text="${sentence.sentence}"></td>
+        <td th:text="${sentence.meaning}"></td>
+    </tr>
+    </tbody>
+</table>
 </body>
 </html>
