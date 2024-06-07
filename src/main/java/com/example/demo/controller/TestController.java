@@ -13,8 +13,12 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Random;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Controller
 @Slf4j
@@ -111,28 +115,74 @@ public class TestController {
         return "wordQuiz";
     }
 
-    @PostMapping("/checkAnswers")
-    public String checkAnswers(@RequestParam List<String> userAnswers, @RequestParam("wordsJson") String wordsJson, Model model) {
+    @GetMapping("/Sentencepage_2")
+    public String sentenceQuiz(@RequestParam("sentencesJson") String sentencesJson, Model model) {
+        ObjectMapper objectMapper = new ObjectMapper();
+        try {
+            List<Sentence> sentences = objectMapper.readValue(sentencesJson, new TypeReference<List<Sentence>>() {});
+            Random random = new Random();
+            Pattern importantWordPattern = Pattern.compile("\\b(\\w{5,})\\b"); // 5글자 이상인 단어들
+
+            for (Sentence sentence : sentences) {
+                Matcher matcher = importantWordPattern.matcher(sentence.getSentence());
+                List<String> importantWords = new ArrayList<>();
+
+                while (matcher.find()) {
+                    importantWords.add(matcher.group());
+                }
+
+                if (!importantWords.isEmpty()) {
+                    String wordToBlank = importantWords.get(random.nextInt(importantWords.size()));
+                    sentence.setSentence(sentence.getSentence().replace(wordToBlank, "_____"));
+                    sentence.setMeaning(sentence.getMeaning() + " (빈칸 단어: " + wordToBlank + ")");
+                }
+            }
+            model.addAttribute("sentences", sentences);
+            model.addAttribute("sentencesJson", sentencesJson);
+        } catch (IOException e) {
+            log.error("An error occurred while processing the request: {}", e.getMessage());
+            return "errorPage";
+        }
+        return "sentenceQuiz";
+    }
+    @PostMapping("/checkSentenceAnswers")
+    public String checkSentenceAnswers(@RequestParam List<String> userAnswers, @RequestParam("sentencesJson") String sentencesJson, Model model) {
+        ObjectMapper objectMapper = new ObjectMapper();
+        try {
+            List<Sentence> sentences = objectMapper.readValue(sentencesJson, new TypeReference<List<Sentence>>() {});
+            int score = 0;
+            for (int i = 0; i < sentences.size(); i++) {
+                if (sentences.get(i).getSentence().equalsIgnoreCase(userAnswers.get(i))) {
+                    score++;
+                }
+            }
+            model.addAttribute("score", score);
+            model.addAttribute("sentences", sentences);
+        } catch (IOException e) {
+            log.error("An error occurred while processing the request: {}", e.getMessage());
+            return "errorPage";
+        }
+        return "sentenceQuizResult";
+    }
+
+
+    @PostMapping("/checkWordAnswers")
+    public String checkWordAnswers(@RequestParam List<String> userAnswers, @RequestParam("wordsJson") String wordsJson, Model model) {
         ObjectMapper objectMapper = new ObjectMapper();
         try {
             List<word> words = objectMapper.readValue(wordsJson, new TypeReference<List<word>>() {});
             int score = 0;
             for (int i = 0; i < words.size(); i++) {
-                // 사용자가 제출한 답변과 단어의 뜻을 비교합니다.
                 if (words.get(i).getMeaning().equals(userAnswers.get(i))) {
                     score++;
                 }
             }
-            // 점수를 모델에 추가합니다.
             model.addAttribute("score", score);
-            // 모든 단어를 모델에 추가합니다.
             model.addAttribute("words", words);
         } catch (IOException e) {
             log.error("An error occurred while processing the request: {}", e.getMessage());
             return "errorPage";
         }
-        // 결과 페이지로 이동합니다.
         return "wordQuizResult";
     }
-
 }

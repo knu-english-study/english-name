@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Sentence Quiz Result</title>
+</head>
+<body>
+<h1>퀴즈 결과</h1>
+<p>점수: <span th:text="${score}"></span></p>
+<table>
+    <thead>
+    <tr>
+        <th>ID</th>
+        <th>Sentence</th>
+        <th>Meaning</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="sentence : ${sentences}">
+        <td th:text="${sentence.id}"></td>
+        <td th:text="${sentence.sentence}"></td>
+        <td th:text="${sentence.meaning}"></td>
+    </tr>
+    </tbody>
+</table>
+<form action="/Wordpage_1" method="get">
+    <button type="submit">다시 시도하기</button>
+</form>
+</body>
+</html>

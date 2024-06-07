@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Sentence Quiz</title>
+</head>
+<body>
+<h1>문장 퀴즈</h1>
+<form action="/checkSentenceAnswers" method="post">
+    <input type="hidden" name="sentencesJson" th:value="${sentencesJson}"/>
+    <div th:each="sentence, stat : ${sentences}">
+        <p th:text="${sentence.sentence}"></p>
+        <label>빈칸:</label>
+        <input type="text" name="userAnswers" />
+    </div>
+    <button type="submit">제출</button>
+</form>
+</body>
+</html>
