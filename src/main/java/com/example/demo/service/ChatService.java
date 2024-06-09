@@ -14,6 +14,7 @@ import java.util.Collections;
 @RequiredArgsConstructor
 public class ChatService implements ChatServiceInterface{
 
+    @Value("${openai.api.key}")
     private String openaiApiKey;
 
     public String getChatResponse(String prompt) {
