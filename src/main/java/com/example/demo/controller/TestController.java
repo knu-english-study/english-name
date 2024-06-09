@@ -1,16 +1,20 @@
 package com.example.demo.controller;
 
+import com.example.demo.DAO.UserDAO;
+import com.example.demo.DTO.UserDTO;
+import com.example.demo.Entity.Users;
 import com.example.demo.Object.Sentence;
 import com.example.demo.Object.word;
 import com.example.demo.service.ChatService;
+import com.example.demo.service.UserService;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.HttpSession;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -27,18 +31,39 @@ public class TestController {
     }
 
     @GetMapping("/")
-    public String index(){
+    public String index() {
         return "index";
     }
 
-    @GetMapping("/Login")
-    public String Login(){
-        return "Login";
+    @Autowired
+    private UserService userService;
+
+    @GetMapping("/register")
+    public String showRegistrationForm() {
+        return "register";
     }
 
-    @GetMapping("/Register")
-    public String Register(){
-        return "Register";
+    @PostMapping("/register")
+    public String registerUser(UserDTO userDTO) {
+        userService.registerUser(userDTO);
+        return "redirect:/";
+    }
+
+    @GetMapping("/login")
+    public String showLoginForm() {
+        return "login";
+    }
+
+    @PostMapping("/login")
+    public String login(@RequestParam String username, @RequestParam String password, HttpSession session) {
+        if (userService.authenticateUser(username, password)) {
+            // 인증 성공 시 세션에 사용자 정보 저장
+            session.setAttribute("username", username);
+            return "redirect:/Wordpage_1";
+        } else {
+            // 인증 실패 시 로그인 페이지로 다시 이동
+            return "redirect:/login?error";
+        }
     }
 
     @GetMapping("/Wordpage_1")
@@ -72,12 +97,13 @@ public class TestController {
 
         ObjectMapper objectMapper = new ObjectMapper();
         try {
-            List<word> words = objectMapper.readValue(wordJsonString, new TypeReference<List<word>>() {});
+            List<word> words = objectMapper.readValue(wordJsonString, new TypeReference<List<word>>() {
+            });
             model.addAttribute("words", words);
             model.addAttribute("wordsJson", wordJsonString);  // JSON 문자열도 모델에 추가
 
             // 문장 생성을 위한 질문
-            String sentenceQuestion = wordJsonString + "위의 데이터에 있는 단어를 사용해서 영어 문장을 3개 만들어줘 이때 밑의 조건을 따라 문장을 적고 그 밑에 문장 전체의 뜻을 적어줘" +
+            String sentenceQuestion = words + "위의 데이터에 있는 단어를 사용해서 영어 문장을 3개 만들어줘 이때 밑의 조건을 따라 문장을 적고 그 밑에 문장 전체의 뜻을 적어줘" +
                     "JSON키워드는 Id, Sentence, Meaning이고 ID는 문장의 인덱스번호," +
                     "Sentence는 너가 만든 영어 문장을," +
                     "Meaning은 영어 문장 전체의 뜻을 한글로 출력해줘." +
@@ -101,9 +127,11 @@ public class TestController {
                     "]";
 
             String sentenceJsonString = chatService.getChatResponse(sentenceQuestion);
-            List<Sentence> sentences = objectMapper.readValue(sentenceJsonString, new TypeReference<List<Sentence>>() {});
+            List<Sentence> sentences = objectMapper.readValue(sentenceJsonString, new TypeReference<List<Sentence>>() {
+            });
             model.addAttribute("sentences", sentences);
             model.addAttribute("sentencesJson", sentenceJsonString);  // JSON 문자열도 모델에 추가
+            //요부분에서 객체를 JPA이용해서 words를 DB에 저장
         } catch (IOException e) {
             log.error("An error occurred while processing the request: {}", e.getMessage());
             return "errorPage";
@@ -116,7 +144,8 @@ public class TestController {
     public String wordQuiz(@RequestParam("wordsJson") String wordsJson, Model model) {
         ObjectMapper objectMapper = new ObjectMapper();
         try {
-            List<word> words = objectMapper.readValue(wordsJson, new TypeReference<List<word>>() {});
+            List<word> words = objectMapper.readValue(wordsJson, new TypeReference<List<word>>() {
+            });
             Collections.shuffle(words);  // 단어 목록을 셔플
             model.addAttribute("words", words);
             model.addAttribute("wordsJson", wordsJson);  // JSON 문자열도 모델에 추가
@@ -131,8 +160,10 @@ public class TestController {
     public String sentenceQuiz(@RequestParam("sentencesJson") String sentencesJson, @RequestParam("wordsJson") String wordsJson, Model model) {
         ObjectMapper objectMapper = new ObjectMapper();
         try {
-            List<Sentence> sentences = objectMapper.readValue(sentencesJson, new TypeReference<List<Sentence>>() {});
-            List<word> words = objectMapper.readValue(wordsJson, new TypeReference<List<word>>() {});
+            List<Sentence> sentences = objectMapper.readValue(sentencesJson, new TypeReference<List<Sentence>>() {
+            });
+            List<word> words = objectMapper.readValue(wordsJson, new TypeReference<List<word>>() {
+            });
             Random random = new Random();
 
             for (Sentence sentence : sentences) {
@@ -150,11 +181,12 @@ public class TestController {
         return "sentenceQuiz";
     }
 
-    @PostMapping("/checkSentenceAnswers")
+    @GetMapping("/checkSentenceAnswers")
     public String checkSentenceAnswers(@RequestParam List<String> userAnswers, @RequestParam("sentencesJson") String sentencesJson, Model model) {
         ObjectMapper objectMapper = new ObjectMapper();
         try {
-            List<Sentence> sentences = objectMapper.readValue(sentencesJson, new TypeReference<List<Sentence>>() {});
+            List<Sentence> sentences = objectMapper.readValue(sentencesJson, new TypeReference<List<Sentence>>() {
+            });
             int score = 0;
             for (int i = 0; i < sentences.size(); i++) {
                 if (sentences.get(i).getSentence().equalsIgnoreCase(userAnswers.get(i))) {
@@ -170,11 +202,12 @@ public class TestController {
         return "sentenceQuizResult";
     }
 
-    @PostMapping("/checkWordAnswers")
+    @GetMapping("/checkWordAnswers")
     public String checkWordAnswers(@RequestParam List<String> userAnswers, @RequestParam("wordsJson") String wordsJson, Model model) {
         ObjectMapper objectMapper = new ObjectMapper();
         try {
-            List<word> words = objectMapper.readValue(wordsJson, new TypeReference<List<word>>() {});
+            List<word> words = objectMapper.readValue(wordsJson, new TypeReference<List<word>>() {
+            });
             int score = 0;
             for (int i = 0; i < words.size(); i++) {
                 if (words.get(i).getMeaning().equals(userAnswers.get(i))) {
@@ -189,4 +222,5 @@ public class TestController {
         }
         return "wordQuizResult";
     }
+
 }

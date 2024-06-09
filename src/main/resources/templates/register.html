@@ -51,11 +51,14 @@
 <body>
 <div class="signup-container">
     <h2>회원가입</h2>
-    <form action="/register" method="post">
-        <input type="text" name="username" placeholder="사용자 이름" required>
-        <input type="password" name="password" placeholder="비밀번호" required>
-        <input type="email" name="email" placeholder="이메일" required>
-        <input type="submit" value="회원가입">
+    <form action="register" method="post">
+        <label for="username">사용자명:</label><br>
+        <input type="text" id="username" name="username"><br>
+        <label for="password">비밀번호:</label><br>
+        <input type="password" id="password" name="password"><br>
+        <label for="email">이메일:</label><br>
+        <input type="email" id="email" name="email"><br><br>
+        <input type="submit" value="가입">
     </form>
 </div>
 </body>

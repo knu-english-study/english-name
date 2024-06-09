@@ -6,7 +6,7 @@
 </head>
 <body>
 <h1>문장 퀴즈</h1>
-<form action="/checkSentenceAnswers" method="post">
+<form action="/checkSentenceAnswers" method="get">
     <input type="hidden" name="sentencesJson" th:value="${sentencesJson}"/>
     <div th:each="sentence, stat : ${sentences}">
         <p th:text="${sentence.sentence}"></p>

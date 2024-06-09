@@ -12,7 +12,7 @@ import java.util.Collections;
 
 @Service
 @RequiredArgsConstructor
-public class ChatService{
+public class ChatService implements ChatServiceInterface{
 
     @Value("${openai.api.key}")
     private String openaiApiKey;
@@ -28,4 +28,6 @@ public class ChatService{
         ChatCompletionResult completionResult = openAiService.createChatCompletion(completionRequest);
         return completionResult.getChoices().get(0).getMessage().getContent().trim();
     }
+
+
 }
