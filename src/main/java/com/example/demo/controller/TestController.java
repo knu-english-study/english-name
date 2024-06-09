@@ -212,6 +212,7 @@ public class TestController {
             for (int i = 0; i < words.size(); i++) {
                 if (words.get(i).getMeaning().equals(userAnswers.get(i))) {
                     score++;
+
                 }
             }
             model.addAttribute("score", score);
