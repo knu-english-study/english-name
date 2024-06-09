@@ -13,12 +13,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 @Controller
 @Slf4j
@@ -29,18 +26,21 @@ public class TestController {
         this.chatService = chatService;
     }
 
-    @GetMapping("index")
+    @GetMapping("/")
     public String index(){
         return "index";
     }
+
     @GetMapping("/Login")
     public String Login(){
         return "Login";
     }
+
     @GetMapping("/Register")
     public String Register(){
         return "Register";
     }
+
     @GetMapping("/Wordpage_1")
     public String test(Model model) {
         String wordQuestion = "어근 1개를 정한다음 1개에서 파생되는 단어3가지를 JSON형식으로 출력해줘" +
@@ -77,7 +77,7 @@ public class TestController {
             model.addAttribute("wordsJson", wordJsonString);  // JSON 문자열도 모델에 추가
 
             // 문장 생성을 위한 질문
-            String sentenceQuestion = "영어 문장을 3개 만들어줘 이때 밑의 조건을 따라 문장을 적고 그 밑에 문장 전체의 뜻을 적어줘" +
+            String sentenceQuestion = wordJsonString + "위의 데이터에 있는 단어를 사용해서 영어 문장을 3개 만들어줘 이때 밑의 조건을 따라 문장을 적고 그 밑에 문장 전체의 뜻을 적어줘" +
                     "JSON키워드는 Id, Sentence, Meaning이고 ID는 문장의 인덱스번호," +
                     "Sentence는 너가 만든 영어 문장을," +
                     "Meaning은 영어 문장 전체의 뜻을 한글로 출력해줘." +
@@ -128,26 +128,18 @@ public class TestController {
     }
 
     @GetMapping("/Sentencepage_2")
-    public String sentenceQuiz(@RequestParam("sentencesJson") String sentencesJson, Model model) {
+    public String sentenceQuiz(@RequestParam("sentencesJson") String sentencesJson, @RequestParam("wordsJson") String wordsJson, Model model) {
         ObjectMapper objectMapper = new ObjectMapper();
         try {
             List<Sentence> sentences = objectMapper.readValue(sentencesJson, new TypeReference<List<Sentence>>() {});
+            List<word> words = objectMapper.readValue(wordsJson, new TypeReference<List<word>>() {});
             Random random = new Random();
-            Pattern importantWordPattern = Pattern.compile("\\b(\\w{5,})\\b"); // 5글자 이상인 단어들
 
             for (Sentence sentence : sentences) {
-                Matcher matcher = importantWordPattern.matcher(sentence.getSentence());
-                List<String> importantWords = new ArrayList<>();
-
-                while (matcher.find()) {
-                    importantWords.add(matcher.group());
-                }
-
-                if (!importantWords.isEmpty()) {
-                    String wordToBlank = importantWords.get(random.nextInt(importantWords.size()));
-                    sentence.setSentence(sentence.getSentence().replace(wordToBlank, "_____"));
-                    sentence.setMeaning(sentence.getMeaning() + " (빈칸 단어: " + wordToBlank + ")");
-                }
+                word wordToBlank = words.get(random.nextInt(words.size()));
+                String wordToBlankString = wordToBlank.getWord();
+                sentence.setSentence(sentence.getSentence().replace(wordToBlankString, "_____"));
+                sentence.setMeaning(sentence.getMeaning() + " (빈칸 단어: " + wordToBlankString + ")");
             }
             model.addAttribute("sentences", sentences);
             model.addAttribute("sentencesJson", sentencesJson);
@@ -157,6 +149,7 @@ public class TestController {
         }
         return "sentenceQuiz";
     }
+
     @PostMapping("/checkSentenceAnswers")
     public String checkSentenceAnswers(@RequestParam List<String> userAnswers, @RequestParam("sentencesJson") String sentencesJson, Model model) {
         ObjectMapper objectMapper = new ObjectMapper();
@@ -176,7 +169,6 @@ public class TestController {
         }
         return "sentenceQuizResult";
     }
-
 
     @PostMapping("/checkWordAnswers")
     public String checkWordAnswers(@RequestParam List<String> userAnswers, @RequestParam("wordsJson") String wordsJson, Model model) {
