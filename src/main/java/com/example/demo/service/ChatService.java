@@ -20,7 +20,7 @@ public class ChatService{
     public String getChatResponse(String prompt) {
         OpenAiService openAiService = new OpenAiService(openaiApiKey);
         ChatCompletionRequest completionRequest = ChatCompletionRequest.builder()
-                .model("gpt-3.5-turbo")  // 사용할 모델 지정
+                .model("gpt-4o")  // 사용할 모델 지정
                 .messages(Collections.singletonList(new ChatMessage("user", prompt)))
                 .maxTokens(1350)
                 .build();

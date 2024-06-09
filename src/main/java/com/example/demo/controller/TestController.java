@@ -29,6 +29,18 @@ public class TestController {
         this.chatService = chatService;
     }
 
+    @GetMapping("index")
+    public String index(){
+        return "index";
+    }
+    @GetMapping("/Login")
+    public String Login(){
+        return "Login";
+    }
+    @GetMapping("/Register")
+    public String Register(){
+        return "Register";
+    }
     @GetMapping("/Wordpage_1")
     public String test(Model model) {
         String wordQuestion = "어근 1개를 정한다음 1개에서 파생되는 단어3가지를 JSON형식으로 출력해줘" +
