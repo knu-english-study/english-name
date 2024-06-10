@@ -28,7 +28,7 @@ public class UserService implements UserServiceInterface{
     @Autowired
     private UserRepository userRepository;
 
-    public boolean authenticateUser(String username, String password) {
+    public boolean authenticateUser(String username, String password) { //로그인 서비스
         Users user = userRepository.findByUsername(username);
         if (user != null && user.getPassword().equals(password)) {
             return true; // 인증 성공

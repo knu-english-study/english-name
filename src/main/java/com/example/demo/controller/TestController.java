@@ -1,12 +1,13 @@
 package com.example.demo.controller;
 
-import com.example.demo.DAO.UserDAO;
 import com.example.demo.DTO.UserDTO;
-import com.example.demo.Entity.Users;
+import com.example.demo.DTO.WordDTO;
+import com.example.demo.Entity.Words;
 import com.example.demo.Object.Sentence;
-import com.example.demo.Object.word;
+import com.example.demo.Object.Word;
 import com.example.demo.service.ChatService;
 import com.example.demo.service.UserService;
+import com.example.demo.service.WordService;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpSession;
@@ -29,6 +30,9 @@ public class TestController {
     public TestController(ChatService chatService) {
         this.chatService = chatService;
     }
+
+    @Autowired
+    private WordService wordService;
 
     @GetMapping("/")
     public String index() {
@@ -68,7 +72,7 @@ public class TestController {
 
     @GetMapping("/Wordpage_1")
     public String test(Model model) {
-        String wordQuestion = "어근 1개를 정한다음 1개에서 파생되는 단어3가지를 JSON형식으로 출력해줘" +
+        String wordQuestion = "어근 2개를 정한다음 2개에서 파생되는 단어10가지를 JSON형식으로 출력해줘" +
                 "JSON키워드는 root, Id, Word, Meaning이고 root에는 단어의 어근을,  ID는 단어의 인덱스번호," +
                 "Word는 너가 만든 영단어를, Meaning은 그 영단어의 뜻을 한글로 출력해줘" +
                 "무조건 밑의 ex대로 JSON형식으로 출력하고 그 주위엔 1개의 문자도 출력해선 안되고 예시의 단어는 항상 다르게 해줘" +
@@ -96,9 +100,17 @@ public class TestController {
         String wordJsonString = chatService.getChatResponse(wordQuestion);
 
         ObjectMapper objectMapper = new ObjectMapper();
+
         try {
-            List<word> words = objectMapper.readValue(wordJsonString, new TypeReference<List<word>>() {
+            List<Word> words = objectMapper.readValue(wordJsonString, new TypeReference<List<Word>>() {
             });
+
+            List<WordDTO> wordDTOs = objectMapper.readValue(wordJsonString, new TypeReference<List<WordDTO>>() {});
+            for (WordDTO wordDTO : wordDTOs) {
+                wordService.saveWord(wordDTO); // 이미 정의된 saveWord 메소드 호출
+            }
+
+
             model.addAttribute("words", words);
             model.addAttribute("wordsJson", wordJsonString);  // JSON 문자열도 모델에 추가
 
@@ -130,8 +142,7 @@ public class TestController {
             List<Sentence> sentences = objectMapper.readValue(sentenceJsonString, new TypeReference<List<Sentence>>() {
             });
             model.addAttribute("sentences", sentences);
-            model.addAttribute("sentencesJson", sentenceJsonString);  // JSON 문자열도 모델에 추가
-            //요부분에서 객체를 JPA이용해서 words를 DB에 저장
+            model.addAttribute("sentencesJson", sentenceJsonString);
         } catch (IOException e) {
             log.error("An error occurred while processing the request: {}", e.getMessage());
             return "errorPage";
@@ -144,7 +155,7 @@ public class TestController {
     public String wordQuiz(@RequestParam("wordsJson") String wordsJson, Model model) {
         ObjectMapper objectMapper = new ObjectMapper();
         try {
-            List<word> words = objectMapper.readValue(wordsJson, new TypeReference<List<word>>() {
+            List<Word> words = objectMapper.readValue(wordsJson, new TypeReference<List<Word>>() {
             });
             Collections.shuffle(words);  // 단어 목록을 셔플
             model.addAttribute("words", words);
@@ -162,12 +173,12 @@ public class TestController {
         try {
             List<Sentence> sentences = objectMapper.readValue(sentencesJson, new TypeReference<List<Sentence>>() {
             });
-            List<word> words = objectMapper.readValue(wordsJson, new TypeReference<List<word>>() {
+            List<Word> words = objectMapper.readValue(wordsJson, new TypeReference<List<Word>>() {
             });
             Random random = new Random();
 
             for (Sentence sentence : sentences) {
-                word wordToBlank = words.get(random.nextInt(words.size()));
+                Word wordToBlank = words.get(random.nextInt(words.size()));
                 String wordToBlankString = wordToBlank.getWord();
                 sentence.setSentence(sentence.getSentence().replace(wordToBlankString, "_____"));
                 sentence.setMeaning(sentence.getMeaning() + " (빈칸 단어: " + wordToBlankString + ")");
@@ -206,7 +217,7 @@ public class TestController {
     public String checkWordAnswers(@RequestParam List<String> userAnswers, @RequestParam("wordsJson") String wordsJson, Model model) {
         ObjectMapper objectMapper = new ObjectMapper();
         try {
-            List<word> words = objectMapper.readValue(wordsJson, new TypeReference<List<word>>() {
+            List<Word> words = objectMapper.readValue(wordsJson, new TypeReference<List<Word>>() {
             });
             int score = 0;
             for (int i = 0; i < words.size(); i++) {
@@ -223,5 +234,4 @@ public class TestController {
         }
         return "wordQuizResult";
     }
-
 }

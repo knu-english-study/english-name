@@ -8,9 +8,10 @@ import lombok.*;
 @Data
 @AllArgsConstructor
 @ToString
-public class Sentence {
+public class Word {
+    private String root;
     private int id;
-    private String sentence;
+    private String word;
     private String meaning;
-    private String answer;
+
 }

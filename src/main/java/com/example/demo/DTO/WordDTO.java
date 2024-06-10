@@ -1,14 +1,13 @@
-package com.example.demo.Object;
+package com.example.demo.DTO;
 
 import lombok.Getter;
 import lombok.Setter;
 
-@Setter
 @Getter
-public class word {
+@Setter
+public class WordDTO {
     private String root;
-    private int id;
+    private Long id;
     private String word;
     private String meaning;
-
 }

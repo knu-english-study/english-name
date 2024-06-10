@@ -7,16 +7,15 @@ import jakarta.persistence.Id;
 import lombok.Getter;
 import lombok.Setter;
 
-@Setter
 @Getter
+@Setter
 @Entity
-public class Users {
+public class Words {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private String root;
     private Long id;
-    private String username;
-    private String password;
-    private String email;
-
+    private String word;
+    private String meaning;
 }
