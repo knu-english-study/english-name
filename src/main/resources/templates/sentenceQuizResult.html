@@ -6,20 +6,29 @@
 </head>
 <body>
 <h1>퀴즈 결과</h1>
-<p>점수: <span th:text="${score}"></span></p>
 <table>
     <thead>
     <tr>
-        <th>ID</th>
         <th>Sentence</th>
-        <th>Meaning</th>
+        <th>Your Answer</th>
+        <th>Correct Answer</th>
+        <th>Commentary</th>
     </tr>
     </thead>
     <tbody>
-    <tr th:each="sentence : ${sentences}">
-        <td th:text="${sentence.id}"></td>
-        <td th:text="${sentence.sentence}"></td>
-        <td th:text="${sentence.meaning}"></td>
+    <tr th:each="quizItem, iter : ${quiz}">
+        <td th:text="${quizItem.get('sentence')}"></td>
+        <td th:text="${userAnswers != null ? userAnswers[iter.index] : ''}"></td>
+        <td th:if="${quizItem.get('question') == '단어 맞추기 문제'}" th:text="${quizItem.get('blank')}"></td>
+        <td th:if="${quizItem.get('question') == '오지선다 문제'}">
+            <span th:each="option, optIter : ${quizItem.get('onym')}">
+                <span th:if="${option == quizItem.get('answer')}" th:text="'* ' + option" style="font-weight: bold;"></span>
+                <span th:if="${option != quizItem.get('answer')}" th:text="option"></span>
+                <span th:if="${optIter.index < quizItem.get('onym').size() - 1}">, </span>
+            </span>
+        </td>
+        <td th:if="${quizItem.get('commentary') != null}" th:text="${quizItem.get('commentary')}"></td>
+        <td th:if="${quizItem.get('commentary') == null}" th:text="'정답: ' + (${quizItem.blank} != null ? ${quizItem.blank} : ${quizItem.answer})"></td>
     </tr>
     </tbody>
 </table>

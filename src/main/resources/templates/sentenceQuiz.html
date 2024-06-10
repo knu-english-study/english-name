@@ -8,10 +8,25 @@
 <h1>문장 퀴즈</h1>
 <form action="/checkSentenceAnswers" method="get">
     <input type="hidden" name="sentencesJson" th:value="${sentencesJson}"/>
-    <div th:each="sentence, stat : ${sentences}">
-        <p th:text="${sentence.sentence}"></p>
-        <label>빈칸:</label>
-        <input type="text" name="userAnswers" />
+    <div th:each="quizItem, stat : ${quiz}">
+        <div>
+            <p th:text="${quizItem.sentence}"></p>
+            <div th:if="${quizItem.question == '단어 맞추기 문제'}">
+                <div>빈칸으로 들어갈 단어는?</div>
+                <label>정답:</label>
+                <input type="text" name="userAnswers" />
+            </div>
+            <div th:if="${quizItem.question == '오지선다 문제'}">
+                <div>다음에 들어갈 단어로 올바른 것은?</div>
+                <ul>
+                    <li><input type="radio" th:name="userAnswers" th:value="${quizItem.onym[0]}" /> <span th:text="${quizItem.onym[0]}"></span></li>
+                    <li><input type="radio" th:name="userAnswers" th:value="${quizItem.onym[1]}" /> <span th:text="${quizItem.onym[1]}"></span></li>
+                    <li><input type="radio" th:name="userAnswers" th:value="${quizItem.onym[2]}" /> <span th:text="${quizItem.onym[2]}"></span></li>
+                    <li><input type="radio" th:name="userAnswers" th:value="${quizItem.onym[3]}" /> <span th:text="${quizItem.onym[3]}"></span></li>
+                    <li><input type="radio" th:name="userAnswers" th:value="${quizItem.onym[4]}" /> <span th:text="${quizItem.onym[4]}"></span></li>
+                </ul>
+            </div>
+        </div>
     </div>
     <button type="submit">제출</button>
 </form>
