@@ -7,7 +7,7 @@ import lombok.Setter;
 @Setter
 public class WordDTO {
     private String root;
-    private Long id;
+    private int id;
     private String word;
     private String meaning;
 }

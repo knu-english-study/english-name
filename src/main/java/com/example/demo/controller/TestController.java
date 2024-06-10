@@ -2,11 +2,11 @@ package com.example.demo.controller;
 
 import com.example.demo.DTO.UserDTO;
 import com.example.demo.DTO.WordDTO;
-import com.example.demo.Entity.Words;
 import com.example.demo.Object.Sentence;
 import com.example.demo.Object.Word;
 import com.example.demo.service.ChatService;
 import com.example.demo.service.UserService;
+import com.example.demo.service.UserWordService;
 import com.example.demo.service.WordService;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 @Controller
@@ -33,6 +34,8 @@ public class TestController {
 
     @Autowired
     private WordService wordService;
+    @Autowired
+    private UserWordService userWordService;
 
     @GetMapping("/")
     public String index() {
@@ -72,7 +75,7 @@ public class TestController {
 
     @GetMapping("/Wordpage_1")
     public String test(Model model) {
-        String wordQuestion = "어근 2개를 정한다음 2개에서 파생되는 단어10가지를 JSON형식으로 출력해줘" +
+        String wordQuestion = "어근 1개를 정한다음 1개에서 파생되는 단어3가지를 JSON형식으로 출력해줘" +
                 "JSON키워드는 root, Id, Word, Meaning이고 root에는 단어의 어근을,  ID는 단어의 인덱스번호," +
                 "Word는 너가 만든 영단어를, Meaning은 그 영단어의 뜻을 한글로 출력해줘" +
                 "무조건 밑의 ex대로 JSON형식으로 출력하고 그 주위엔 1개의 문자도 출력해선 안되고 예시의 단어는 항상 다르게 해줘" +
@@ -168,30 +171,54 @@ public class TestController {
     }
 
     @GetMapping("/Sentencepage_2")
-    public String sentenceQuiz(@RequestParam("sentencesJson") String sentencesJson, @RequestParam("wordsJson") String wordsJson, Model model) {
+    public String sentenceQuiz(@RequestParam("sentencesJson") String sentencesJson, Model model) {
         ObjectMapper objectMapper = new ObjectMapper();
         try {
-            List<Sentence> sentences = objectMapper.readValue(sentencesJson, new TypeReference<List<Sentence>>() {
-            });
-            List<Word> words = objectMapper.readValue(wordsJson, new TypeReference<List<Word>>() {
-            });
-            Random random = new Random();
+            // JSON 문자열을 Sentence 객체 리스트로 변환
+            List<Sentence> sentences = objectMapper.readValue(sentencesJson, new TypeReference<List<Sentence>>() {});
+            String quizQuestion = sentences.toString() + " 위 문장들을 기반으로 3문제를 만들어줘 이때 문제의 포맷은 다음과 같고 밑의 예시는 다른 예제로 대체해.\n" +
+                    "JSON키워드는 id, question, sentence, blank, onym이고 id는 문장의 인덱스번호,\n" +
+                    "question은 단어 맞추기 문제와 오지선다 문제를 번갈아가며 출력해줘.\n" +
+                    "sentence는 위에 만든 문장을 가지고 와줘.\n" +
+                    "blank는 위에서 가져온 단어를 빈칸으로 설정해줘.\n" +
+                    "onym은 가져온 단어와 비슷한 유의어와 반의어를 4개 가져와서 문제의 정답과 함께 5문제로 설정하되 문제의 정답이 첫번째만 나오는게 아니라 순서를 무작위로 설정해줘.\n" +
+                    "무조건 밑의 ex대로 JSON형식으로 출력하고 단어 맞추기 문제와 오지선다 문제를 번갈아가면서 출력 해줘.\n" +
+                    "ex) [\n" +
+                    "  {\n" +
+                    "    \"id\": 1,\n" +
+                    "    \"question\": \"단어 맞추기 문제\",\n" +
+                    "    \"sentence\": \"The king issued an _____ demanding higher taxes from his subjects.\",\n" +
+                    "    \"blank\": \"edict\",\n" +
+                    "  },\n" +
+                    "  {\n" +
+                    "    \"id\": 2,\n" +
+                    "    \"question\": \"오지선다 문제\",\n" +
+                    "    \"sentence\": \"The priest offered a __________ to the newlyweds for a happy marriage.\",\n" +
+                    "    \"blank\": \"benediction\",\n" +
+                    "    \"onym\": [\"benediction\", \"blessing\", \"prayer\", \"curse\", \"wish\"]\n" +
+                    "  }\n" +
+                    "]";
 
-            for (Sentence sentence : sentences) {
-                Word wordToBlank = words.get(random.nextInt(words.size()));
-                String wordToBlankString = wordToBlank.getWord();
-                sentence.setSentence(sentence.getSentence().replace(wordToBlankString, "_____"));
-                sentence.setMeaning(sentence.getMeaning() + " (빈칸 단어: " + wordToBlankString + ")");
+            // ChatGPT의 응답을 받음
+            String quizJsonString = chatService.getChatResponse(quizQuestion);
+
+            // 응답이 JSON 형식인지 확인하고 처리
+            if (quizJsonString.trim().startsWith("{") || quizJsonString.trim().startsWith("[")) {
+                // JSON 형식으로 파싱
+                List<Object> quiz = objectMapper.readValue(quizJsonString, new TypeReference<List<Object>>() {});
+                model.addAttribute("quiz", quiz);
+                model.addAttribute("sentences", sentences);
+                model.addAttribute("sentencesJson", sentencesJson);  // JSON 문자열도 모델에 추가
+            } else {
+                log.error("Invalid JSON response received from ChatGPT: {}", quizJsonString);
+                return "errorPage";
             }
-            model.addAttribute("sentences", sentences);
-            model.addAttribute("sentencesJson", sentencesJson);
         } catch (IOException e) {
             log.error("An error occurred while processing the request: {}", e.getMessage());
             return "errorPage";
         }
         return "sentenceQuiz";
     }
-
     @GetMapping("/checkSentenceAnswers")
     public String checkSentenceAnswers(@RequestParam List<String> userAnswers, @RequestParam("sentencesJson") String sentencesJson, Model model) {
         ObjectMapper objectMapper = new ObjectMapper();
@@ -223,7 +250,6 @@ public class TestController {
             for (int i = 0; i < words.size(); i++) {
                 if (words.get(i).getMeaning().equals(userAnswers.get(i))) {
                     score++;
-
                 }
             }
             model.addAttribute("score", score);

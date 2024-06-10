@@ -1,5 +1,7 @@
 package com.example.demo.service;
 
-public interface WordServiceInterface {
+import com.example.demo.DTO.WordDTO;
 
+public interface WordServiceInterface {
+    void saveWord(WordDTO wordDTO);
 }
