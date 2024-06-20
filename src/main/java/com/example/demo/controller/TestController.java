@@ -219,26 +219,74 @@ public class TestController {
         }
         return "sentenceQuiz";
     }
+
     @GetMapping("/checkSentenceAnswers")
     public String checkSentenceAnswers(@RequestParam List<String> userAnswers, @RequestParam("sentencesJson") String sentencesJson, Model model) {
         ObjectMapper objectMapper = new ObjectMapper();
         try {
-            List<Sentence> sentences = objectMapper.readValue(sentencesJson, new TypeReference<List<Sentence>>() {
-            });
-            int score = 0;
-            for (int i = 0; i < sentences.size(); i++) {
-                if (sentences.get(i).getSentence().equalsIgnoreCase(userAnswers.get(i))) {
-                    score++;
+            List<Sentence> sentences = objectMapper.readValue(sentencesJson, new TypeReference<List<Sentence>>() {});
+            String quizQuestionAnswers = sentences.toString() + " 위에서 만든 문장의 정답과 해설을 나타내는 방식으로 단어 맞추기 문제는 정답을 알려주고 오지선다 문제는 정답을 굵게 표시하고 해설을 추가해줘.\n" +
+                    "JSON키워드는 id, question, sentence, blank, onym, answer, commentary이고 id는 문장의 인덱스번호,\n" +
+                    "question은 단어 맞추기 문제와 오지선다 문제를 번갈아가며 출력해줘.\n" +
+                    "sentence는 위에 만든 문장을 가지고 오되 문제의 빈칸을 올바르게 설정해줘.\n" +
+                    "blank는 위에서 가져온 단어를 빈칸으로 설정해줘.\n" +
+                    "onym은 가져온 단어와 비슷한 유의어와 반의어를 4개 가져와서 문제의 정답과 함께 5문제로 설정하되 문제의 정답이 첫번째만 나오는게 아니라 순서를 무작위로 설정해줘.\n" +
+                    "answers는 문제의 정답을 표시하되 빈칸 문제와 오지선다의 정답을 굵게 표시해줘.\n" +
+                    "commentary는 빈칸 문제는 null 값이기에 출력하지 말고 오지선다 문제의 해설의 포맷은 '문장을 해석하면 ~~ 인데 이때 빈칸에  ~~의미의 단어가 들어가야 함으로 ~가 답입니다'라고 설정해줘. \n" +
+                    "무조건 밑의 ex대로 JSON형식으로 출력하고 단어 맞추기 문제와 오지선다 문제를 번갈아가면서 출력 해줘.\n" +
+                    "ex) [\n" +
+                    "  {\n" +
+                    "    \"id\": 1,\n" +
+                    "    \"question\": \"단어 맞추기 문제\",\n" +
+                    "    \"sentence\": \"The king issued an _____ demanding higher taxes from his subjects.\n" +
+                    "    \"blank\": \"edict\",\n" +
+                    "    \"answer\": \"edict\",\n" +
+                    "  },\n" +
+                    "  {\n" +
+                    "    \"id\": 2,\n" +
+                    "    \"question\": \"오지선다 문제\",\n" +
+                    "    \"sentence\": \"The king issued an _____ demanding higher taxes from his subjects.\n" +
+                    "    \"blank\": \"benediction\",\n" +
+                    "    \"onym\": [\"edict\", \"유의어1\", \"반의어2\", \"유의어3\", \"유의어4\"],\n" +
+                    "    \"answer\": \"edict\",\n" +
+                    "    \"commentary\": \"문장을 해석하면 \"왕은 그의 백성들에게 더 높은 세금을 요구하는 _____을 발표했다\" 인데 이때 빈칸에 '공식 명령'의 의미의 단어가 들어가야 함으로 edict가 답입니다.”\"\n" +
+                    "  }\n" +
+                    "]";
+
+            String quizJsonString = chatService.getChatResponse(quizQuestionAnswers);
+
+            if (quizJsonString.trim().startsWith("[") && quizJsonString.trim().endsWith("]")) {
+                List<Map<String, Object>> quiz = objectMapper.readValue(quizJsonString, new TypeReference<List<Map<String, Object>>>() {});
+                int score = 0;
+
+                for (int i = 0; i < quiz.size(); i++) {
+                    Map<String, Object> quizItem = quiz.get(i);
+                    String userAnswer = userAnswers.get(i);
+
+                    if ("단어 맞추기 문제".equals(quizItem.get("question"))) {
+                        String correctAnswer = (String) quizItem.get("blank");
+                        if (correctAnswer.equalsIgnoreCase(userAnswer)) {
+                            score++;
+                        }
+                    } else if ("오지선다 문제".equals(quizItem.get("question"))) {
+                        List<String> onym = (List<String>) quizItem.get("onym");
+                    }
                 }
+
+                model.addAttribute("score", score);
+                model.addAttribute("quiz", quiz);
+            } else {
+                log.error("Invalid JSON response received from ChatGPT: {}", quizJsonString);
+                return "errorPage";
             }
-            model.addAttribute("score", score);
-            model.addAttribute("sentences", sentences);
         } catch (IOException e) {
             log.error("An error occurred while processing the request: {}", e.getMessage());
             return "errorPage";
         }
         return "sentenceQuizResult";
     }
+
+
 
     @GetMapping("/checkWordAnswers")
     public String checkWordAnswers(@RequestParam List<String> userAnswers, @RequestParam("wordsJson") String wordsJson, Model model) {
